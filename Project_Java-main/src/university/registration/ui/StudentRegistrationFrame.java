@@ -1076,6 +1076,12 @@ public class StudentRegistrationFrame extends JFrame {
         String term = (String) cbTerm.getSelectedItem();
         if (term == null) return filtered;
         
+        // Kiểm tra học kỳ có đang hoạt động không (không phải "Đã kết thúc")
+        // Nếu học kỳ đã kết thúc, không hiển thị học phần nào
+        if (!Memory.isTermOpen(term)) {
+            return filtered; // Trả về danh sách rỗng nếu học kỳ đã kết thúc
+        }
+        
         String searchText = searchField.getText().toLowerCase().trim();
         
         for (Course c : Memory.courses.values()) {
@@ -1618,7 +1624,8 @@ public class StudentRegistrationFrame extends JFrame {
         
         // Kiểm tra học kỳ có mở không
         if (!Memory.isTermOpen(term)) {
-            JOptionPane.showMessageDialog(this, "Học kỳ đang khóa đăng ký.");
+            String errorMsg = Memory.getTermOpenErrorMessage(term);
+            JOptionPane.showMessageDialog(this, errorMsg, "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
         

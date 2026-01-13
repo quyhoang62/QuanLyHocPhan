@@ -214,8 +214,53 @@ public class Memory {
 
         // Danh sách học kỳ demo
         terms.addAll(Arrays.asList("20252","20251","20242"));
-        // Với mỗi học kỳ, tạo TermSetting và mặc định là đang mở đăng ký (true)
-        for (String t : terms) termSettings.put(t, new TermSetting(true)); // mặc định mở
+        
+        // Tạo TermSetting với thông tin chi tiết cho từng học kỳ
+        // Học kỳ 20252: Học kỳ 2 Năm học 2025, 2025-2026, 08/01/2026 đến 08/04/2026, Đang hoạt động
+        Calendar cal = Calendar.getInstance();
+        cal.set(2026, Calendar.JANUARY, 8, 0, 0, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        Date start20252 = cal.getTime();
+        cal.set(2026, Calendar.APRIL, 8, 0, 0, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        Date end20252 = cal.getTime();
+        termSettings.put("20252", new TermSetting(
+            true, 
+            "Học kỳ 2 Năm học 2025", 
+            "2025-2026", 
+            start20252, 
+            end20252
+        ));
+        
+        // Học kỳ 20251: Học kỳ 1 Năm học 2025, 2025-2026, 01/09/2025 đến 01/01/2026, Đã kết thúc
+        cal.set(2025, Calendar.SEPTEMBER, 1, 0, 0, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        Date start20251 = cal.getTime();
+        cal.set(2026, Calendar.JANUARY, 1, 0, 0, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        Date end20251 = cal.getTime();
+        termSettings.put("20251", new TermSetting(
+            false, 
+            "Học kỳ 1 Năm học 2025", 
+            "2025-2026", 
+            start20251, 
+            end20251
+        ));
+        
+        // Học kỳ 20242: Học kỳ 2 Năm học 2024, 2024-2025, 01/02/2024 đến 01/06/2024, Đã kết thúc
+        cal.set(2024, Calendar.FEBRUARY, 1, 0, 0, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        Date start20242 = cal.getTime();
+        cal.set(2024, Calendar.JUNE, 1, 0, 0, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        Date end20242 = cal.getTime();
+        termSettings.put("20242", new TermSetting(
+            false, 
+            "Học kỳ 2 Năm học 2024", 
+            "2024-2025", 
+            start20242, 
+            end20242
+        ));
 
         // Thêm các học phần (Course) vào danh sách courses
         // Cơ sở và Tự chọn
@@ -374,10 +419,16 @@ public class Memory {
         // Đồ án nghiên cứu
         addCourse(new Course("ET4920","Đồ án nghiên cứu Cử nhân (KT Điện tử - Viễn thông)",8));
 
-        // Mở offering cho HỌC KỲ MỚI NHẤT – cho tất cả chương trình học (CTĐT)
-        String latest = terms.get(0); // phần tử đầu trong list terms (20252)
-        for (String code : courses.keySet())
-            setOffering(latest, code, true, "Tất cả");
+        // Mở offering cho học kỳ 20252 – chỉ mở các học phần được chỉ định
+        String term20252 = "20252";
+        // Danh sách các học phần được mở trong học kỳ 20252
+        String[] openCourses20252 = {
+            "CT101", "CT102", "EE201", "MA101", 
+            "PE101", "PE2101", "PE2151", "PE2201"
+        };
+        for (String code : openCourses20252) {
+            setOffering(term20252, code, true, "Tất cả");
+        }
 
         // Tạo một sinh viên demo mặc định
         Student demo = new Student(
@@ -477,12 +528,63 @@ public class Memory {
 
     /* ---------- term setting ---------- */
 
-    /** Kiểm tra học kỳ có đang mở đăng ký hay không */
+    /** Kiểm tra học kỳ có đang mở đăng ký hay không 
+     * 
+     * Học kỳ được coi là mở đăng ký khi:
+     * - registrationOpen = true
+     * - VÀ ngày hiện tại >= startDate (nếu startDate không null)
+     * - VÀ ngày hiện tại <= endDate (nếu endDate không null)
+     */
     public static boolean isTermOpen(String term){
-        // Nếu không tìm thấy TermSetting thì dùng mặc định (đóng = false)
-        return termSettings
-                .getOrDefault(term, new TermSetting(false))
-                .registrationOpen;
+        TermSetting setting = termSettings.get(term);
+        if (setting == null) {
+            return false; // Nếu không có TermSetting thì đóng
+        }
+        
+        // Kiểm tra flag registrationOpen
+        if (!setting.registrationOpen) {
+            return false;
+        }
+        
+        // Kiểm tra thời gian mở đăng ký
+        Date now = new Date();
+        
+        // Nếu có startDate, ngày hiện tại phải >= startDate
+        if (setting.startDate != null && now.before(setting.startDate)) {
+            return false; // Chưa đến thời gian mở đăng ký
+        }
+        
+        // Nếu có endDate, ngày hiện tại phải <= endDate
+        if (setting.endDate != null && now.after(setting.endDate)) {
+            return false; // Đã qua thời gian mở đăng ký
+        }
+        
+        return true; // Tất cả điều kiện đều thỏa mãn
+    }
+    
+    /** Lấy thông báo lỗi chi tiết khi học kỳ không mở đăng ký */
+    public static String getTermOpenErrorMessage(String term) {
+        TermSetting setting = termSettings.get(term);
+        if (setting == null) {
+            return "Học kỳ chưa được cấu hình.";
+        }
+        
+        if (!setting.registrationOpen) {
+            return "Học kỳ đang khóa đăng ký.";
+        }
+        
+        Date now = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        
+        if (setting.startDate != null && now.before(setting.startDate)) {
+            return "Chưa đến thời gian mở đăng ký. Thời gian mở đăng ký bắt đầu từ: " + sdf.format(setting.startDate);
+        }
+        
+        if (setting.endDate != null && now.after(setting.endDate)) {
+            return "Đã qua thời gian mở đăng ký. Thời gian mở đăng ký kết thúc vào: " + sdf.format(setting.endDate);
+        }
+        
+        return "Học kỳ đang khóa đăng ký.";
     }
 
     /** Đặt trạng thái mở/đóng cho một học kỳ */

@@ -638,25 +638,6 @@ public class AdminFrame extends JFrame {
         cbTermCourse.setPreferredSize(new Dimension(150, 36));
         cbTermCourse.addActionListener(e -> refreshCourseTable());
         
-        // Thời gian đăng ký
-        JLabel lbStartDate = new JLabel("Từ ngày:");
-        lbStartDate.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        lbStartDate.setForeground(new Color(55, 65, 81));
-        JSpinner.DateEditor startDateEditor = new JSpinner.DateEditor(spRegStartDate, "yyyy-MM-dd");
-        spRegStartDate.setEditor(startDateEditor);
-        ((JSpinner.DefaultEditor) spRegStartDate.getEditor()).getTextField().setEditable(false);
-        spRegStartDate.setPreferredSize(new Dimension(150, 36));
-        spRegStartDate.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        
-        JLabel lbEndDate = new JLabel("Đến ngày:");
-        lbEndDate.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        lbEndDate.setForeground(new Color(55, 65, 81));
-        JSpinner.DateEditor endDateEditor = new JSpinner.DateEditor(spRegEndDate, "yyyy-MM-dd");
-        spRegEndDate.setEditor(endDateEditor);
-        ((JSpinner.DefaultEditor) spRegEndDate.getEditor()).getTextField().setEditable(false);
-        spRegEndDate.setPreferredSize(new Dimension(150, 36));
-        spRegEndDate.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        
         // Tìm kiếm
         JLabel lbSearch = new JLabel("Tìm kiếm:");
         lbSearch.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -682,41 +663,70 @@ public class AdminFrame extends JFrame {
         cbCourseStatus.setPreferredSize(new Dimension(140, 36));
         cbCourseStatus.addActionListener(e -> refreshCourseTable());
         
-        // Nút tạo học phần mới
-        JButton btnCreateCourse = new JButton("+ Tạo học phần mới");
-        btnCreateCourse.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnCreateCourse.setBackground(new Color(59, 130, 246));
-        btnCreateCourse.setForeground(Color.WHITE);
-        btnCreateCourse.setBorderPainted(false);
-        btnCreateCourse.setPreferredSize(new Dimension(200, 36));
-        btnCreateCourse.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnCreateCourse.addActionListener(e -> showCreateCourseDialog());
-        
-        // Hover effect cho nút tạo học phần
-        btnCreateCourse.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                btnCreateCourse.setBackground(new Color(37, 99, 235));
-            }
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                btnCreateCourse.setBackground(new Color(59, 130, 246));
-            }
-        });
-        
         filterPanel.add(lbTerm);
         filterPanel.add(cbTermCourse);
-        filterPanel.add(lbStartDate);
-        filterPanel.add(spRegStartDate);
-        filterPanel.add(lbEndDate);
-        filterPanel.add(spRegEndDate);
         filterPanel.add(lbSearch);
         filterPanel.add(searchCourseField);
         filterPanel.add(lbStatus);
         filterPanel.add(cbCourseStatus);
-        filterPanel.add(btnCreateCourse);
         
-        filterCard.add(filterPanel, BorderLayout.CENTER);
+        // Panel cho các action buttons (bên phải)
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
+        buttonPanel.setOpaque(false);
+        
+        // Nút Mở tất cả
+        JButton btnOpenAll = new JButton("Mở tất cả");
+        btnOpenAll.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnOpenAll.setBackground(new Color(34, 197, 94));
+        btnOpenAll.setForeground(Color.WHITE);
+        btnOpenAll.setBorderPainted(false);
+        btnOpenAll.setPreferredSize(new Dimension(130, 36));
+        btnOpenAll.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnOpenAll.addActionListener(e -> openAllCourses());
+        
+        // Hover effect cho nút Mở tất cả
+        btnOpenAll.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                btnOpenAll.setBackground(new Color(22, 163, 74));
+            }
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                btnOpenAll.setBackground(new Color(34, 197, 94));
+            }
+        });
+        
+        // Nút Đóng tất cả
+        JButton btnCloseAll = new JButton("Đóng tất cả");
+        btnCloseAll.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnCloseAll.setBackground(new Color(239, 68, 68));
+        btnCloseAll.setForeground(Color.WHITE);
+        btnCloseAll.setBorderPainted(false);
+        btnCloseAll.setPreferredSize(new Dimension(130, 36));
+        btnCloseAll.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnCloseAll.addActionListener(e -> closeAllCourses());
+        
+        // Hover effect cho nút Đóng tất cả
+        btnCloseAll.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                btnCloseAll.setBackground(new Color(220, 38, 38));
+            }
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                btnCloseAll.setBackground(new Color(239, 68, 68));
+            }
+        });
+        
+        buttonPanel.add(btnOpenAll);
+        buttonPanel.add(btnCloseAll);
+        
+        JPanel mainFilterPanel = new JPanel(new BorderLayout());
+        mainFilterPanel.setOpaque(false);
+        mainFilterPanel.add(filterPanel, BorderLayout.CENTER);
+        mainFilterPanel.add(buttonPanel, BorderLayout.EAST);
+        
+        filterCard.add(mainFilterPanel, BorderLayout.CENTER);
         
         // ========== TABLE SECTION ==========
         courseModel = new DefaultTableModel(new Object[]{
@@ -945,7 +955,7 @@ public class AdminFrame extends JFrame {
         });
         
         // Nút Từ chối tất cả
-        JButton btnRejectAll = new JButton("✗ Từ chối tất cả");
+        JButton btnRejectAll = new JButton("Từ chối tất cả");
         btnRejectAll.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnRejectAll.setBackground(new Color(239, 68, 68));
         btnRejectAll.setForeground(Color.WHITE);
@@ -977,7 +987,7 @@ public class AdminFrame extends JFrame {
         // ========== TABLE SECTION ==========
         approvalModel = new DefaultTableModel(new Object[]{
                 "Mã đăng ký", "Tên sinh viên", "Mã SV", "Khoa/Viện", "Mã học phần", "Tên học phần",
-                "Trạng thái", "Hành động"
+                "Trạng thái", "Hành động", "Học kỳ"
         }, 0) {
             @Override
             public boolean isCellEditable(int r, int c) {
@@ -1031,6 +1041,9 @@ public class AdminFrame extends JFrame {
         approvalTable.getColumnModel().getColumn(5).setPreferredWidth(300); // Tên học phần
         approvalTable.getColumnModel().getColumn(6).setPreferredWidth(120); // Trạng thái
         approvalTable.getColumnModel().getColumn(7).setPreferredWidth(200); // Hành động
+        approvalTable.getColumnModel().getColumn(8).setPreferredWidth(0); // Học kỳ (ẩn)
+        approvalTable.getColumnModel().getColumn(8).setMinWidth(0);
+        approvalTable.getColumnModel().getColumn(8).setMaxWidth(0);
         
         // Custom renderer cho cột HÀNH ĐỘNG
         approvalTable.getColumnModel().getColumn(7).setCellRenderer(new DefaultTableCellRenderer() {
@@ -1477,7 +1490,7 @@ public class AdminFrame extends JFrame {
         String searchText = searchCourseField.getText().toLowerCase().trim();
         String selectedStatus = (String) cbCourseStatus.getSelectedItem();
         
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         
         for (Course c : Memory.courses.values()) {
             Offering off = Memory.getOffering(term, c.code);
@@ -1496,13 +1509,21 @@ public class AdminFrame extends JFrame {
                 if (!selectedStatus.equals(status)) continue;
             }
             
-            // Thời gian mở (có thể lấy từ RegistrationPeriod hoặc Offering)
+            // Thời gian mở - lấy từ thời gian mở đăng ký của học kỳ
             String timeRange = "-";
-            if (off != null && off.open) {
-                Date startDate = (Date) spRegStartDate.getValue();
-                Date endDate = (Date) spRegEndDate.getValue();
-                if (startDate != null && endDate != null) {
-                    timeRange = sdf.format(startDate) + " đến " + sdf.format(endDate);
+            if (term != null && !term.isEmpty()) {
+                TermSetting termSetting = Memory.termSettings.get(term);
+                if (termSetting != null) {
+                    Date startDate = termSetting.startDate;
+                    Date endDate = termSetting.endDate;
+                    
+                    if (startDate != null && endDate != null) {
+                        timeRange = sdf.format(startDate) + " đến " + sdf.format(endDate);
+                    } else if (startDate != null) {
+                        timeRange = sdf.format(startDate) + " đến -";
+                    } else if (endDate != null) {
+                        timeRange = "- đến " + sdf.format(endDate);
+                    }
                 }
             }
             
@@ -1588,14 +1609,14 @@ public class AdminFrame extends JFrame {
         
         JPanel datePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 16, 0));
         datePanel.setOpaque(false);
-        JSpinner.DateEditor courseStartEditor = new JSpinner.DateEditor(spCourseStartDate, "yyyy-MM-dd");
+        JSpinner.DateEditor courseStartEditor = new JSpinner.DateEditor(spCourseStartDate, "dd/MM/yyyy");
         spCourseStartDate.setEditor(courseStartEditor);
         ((JSpinner.DefaultEditor) spCourseStartDate.getEditor()).getTextField().setEditable(false);
         spCourseStartDate.setPreferredSize(new Dimension(150, 36));
         spCourseStartDate.setFont(inputFont);
         JPanel startDatePanel = createSpinnerGroup("Thời gian mở (từ ngày)", spCourseStartDate, 150, labelFont, inputFont);
         
-        JSpinner.DateEditor courseEndEditor = new JSpinner.DateEditor(spCourseEndDate, "yyyy-MM-dd");
+        JSpinner.DateEditor courseEndEditor = new JSpinner.DateEditor(spCourseEndDate, "dd/MM/yyyy");
         spCourseEndDate.setEditor(courseEndEditor);
         ((JSpinner.DefaultEditor) spCourseEndDate.getEditor()).getTextField().setEditable(false);
         spCourseEndDate.setPreferredSize(new Dimension(150, 36));
@@ -1819,15 +1840,15 @@ public class AdminFrame extends JFrame {
         ));
         cbStatus.setSelectedIndex(0); // Mặc định là "Đang hoạt động"
         
-        // Thời gian bắt đầu
-        JLabel lbStartDate = new JLabel("Thời gian bắt đầu:");
+        // Thời gian mở đăng ký bắt đầu
+        JLabel lbStartDate = new JLabel("Thời gian mở đăng ký (bắt đầu):");
         lbStartDate.setFont(labelFont);
         lbStartDate.setForeground(new Color(55, 65, 81));
         lbStartDate.setBorder(new EmptyBorder(16, 0, 8, 0));
         lbStartDate.setAlignmentX(Component.LEFT_ALIGNMENT);
         
         JSpinner spStartDate = new JSpinner(new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH));
-        JSpinner.DateEditor startDateEditor = new JSpinner.DateEditor(spStartDate, "MM/dd/yyyy");
+        JSpinner.DateEditor startDateEditor = new JSpinner.DateEditor(spStartDate, "dd/MM/yyyy");
         spStartDate.setEditor(startDateEditor);
         ((JSpinner.DefaultEditor) spStartDate.getEditor()).getTextField().setEditable(false);
         spStartDate.setPreferredSize(new Dimension(0, 40));
@@ -1838,15 +1859,15 @@ public class AdminFrame extends JFrame {
                 BorderFactory.createEmptyBorder(0, 0, 0, 0)
         ));
         
-        // Thời gian kết thúc
-        JLabel lbEndDate = new JLabel("Thời gian kết thúc:");
+        // Thời gian mở đăng ký kết thúc
+        JLabel lbEndDate = new JLabel("Thời gian mở đăng ký (kết thúc):");
         lbEndDate.setFont(labelFont);
         lbEndDate.setForeground(new Color(55, 65, 81));
         lbEndDate.setBorder(new EmptyBorder(16, 0, 8, 0));
         lbEndDate.setAlignmentX(Component.LEFT_ALIGNMENT);
         
         JSpinner spEndDate = new JSpinner(new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH));
-        JSpinner.DateEditor endDateEditor = new JSpinner.DateEditor(spEndDate, "MM/dd/yyyy");
+        JSpinner.DateEditor endDateEditor = new JSpinner.DateEditor(spEndDate, "dd/MM/yyyy");
         spEndDate.setEditor(endDateEditor);
         ((JSpinner.DefaultEditor) spEndDate.getEditor()).getTextField().setEditable(false);
         spEndDate.setPreferredSize(new Dimension(0, 40));
@@ -2142,6 +2163,11 @@ public class AdminFrame extends JFrame {
         TermSetting setting = new TermSetting(registrationOpen, termName, academicYear, startDate, endDate);
         Memory.termSettings.put(termCode, setting);
         
+        // Nếu trạng thái là "Đã kết thúc" (registrationOpen = false), đóng tất cả các Offering
+        if (!registrationOpen) {
+            closeAllOfferings(termCode);
+        }
+        
         JOptionPane.showMessageDialog(this, 
                 "Đã tạo học kỳ " + termCode + " thành công!",
                 "Thành công",
@@ -2223,7 +2249,7 @@ public class AdminFrame extends JFrame {
                         
                         approvalModel.addRow(new Object[]{
                             regCode, student.fullName, studentId, student.program, item.course.code, item.course.name,
-                            status, ""
+                            status, "", term  // Thêm term vào cuối để dùng trong approveAll
                     });
                 }
             }
@@ -2382,49 +2408,32 @@ public class AdminFrame extends JFrame {
         for (int row = 0; row < rowCount; row++) {
             String studentId = (String) approvalModel.getValueAt(row, 2);
             String courseCode = (String) approvalModel.getValueAt(row, 4); // Mã học phần ở cột 4
-            String status = (String) approvalModel.getValueAt(row, 5);
+            String status = (String) approvalModel.getValueAt(row, 6); // Trạng thái ở cột 6
             
             // Chỉ duyệt các đăng ký đang ở trạng thái chờ duyệt
             if ("Chờ duyệt".equals(status) || "Chờ xử lý".equals(status) || 
                 "Đã gửi".equals(status) || "Tạm".equals(status)) {
                 
-                String term = selectedTerm != null && !selectedTerm.equals("Tất cả") ? selectedTerm : null;
+                // Lấy term từ bảng (cột 8 - cột ẩn)
+                String term = (String) approvalModel.getValueAt(row, 8);
                 
-                if (term == null) {
-                    // Tìm term từ dữ liệu
-                    for (Map.Entry<String, Map<String, List<RegItem>>> studentEntry : Memory.regs.entrySet()) {
-                        if (studentEntry.getKey().equals(studentId)) {
-                            Map<String, List<RegItem>> termRegs = studentEntry.getValue();
-                            for (Map.Entry<String, List<RegItem>> termEntry : termRegs.entrySet()) {
-                                List<RegItem> regItems = termEntry.getValue();
-                                for (RegItem item : regItems) {
-                                    if (item.course.code.equals(courseCode) && 
-                                        ("Chờ duyệt".equals(item.status) || "Chờ xử lý".equals(item.status) || 
-                                         "Đã gửi".equals(item.status) || "Tạm".equals(item.status))) {
-                                        item.status = "Đã duyệt";
-                                        approvedCount++;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } else {
-            List<RegItem> regs = Memory.loadReg(studentId, term);
-            for (RegItem item : regs) {
+                if (term != null && !term.isEmpty()) {
+                    // Duyệt đăng ký với term đã biết
+                    List<RegItem> regs = Memory.loadReg(studentId, term);
+                    for (RegItem item : regs) {
                         if (item.course.code.equals(courseCode) && 
                             ("Chờ duyệt".equals(item.status) || "Chờ xử lý".equals(item.status) || 
                              "Đã gửi".equals(item.status) || "Tạm".equals(item.status))) {
                             item.status = "Đã duyệt";
                             approvedCount++;
-                    break;
+                            break;
                         }
                     }
                 }
-                }
             }
+        }
 
-            filterApprovalTable();
+        filterApprovalTable();
         JOptionPane.showMessageDialog(this, 
                 "Đã duyệt thành công " + approvedCount + " đăng ký!", 
                 "Thành công", 
@@ -3106,7 +3115,7 @@ public class AdminFrame extends JFrame {
         List<String> filtered = getFilteredTerms();
         
         // Hiển thị tất cả kết quả (không phân trang)
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         for (int i = 0; i < filtered.size(); i++) {
             String term = filtered.get(i);
             TermSetting setting = Memory.termSettings.get(term);
@@ -3125,12 +3134,52 @@ public class AdminFrame extends JFrame {
             
             // Thời gian
             String timeRange = "-";
-            if (setting.startDate != null && setting.endDate != null) {
-                timeRange = sdf.format(setting.startDate) + " đến " + sdf.format(setting.endDate);
-            } else if (setting.startDate != null) {
-                timeRange = sdf.format(setting.startDate) + " đến -";
-            } else if (setting.endDate != null) {
-                timeRange = "- đến " + sdf.format(setting.endDate);
+            Date startDate = setting.startDate;
+            Date endDate = setting.endDate;
+            
+            // Nếu không có ngày, tạo ngày mặc định dựa trên mã học kỳ
+            if (startDate == null && endDate == null) {
+                try {
+                    // Parse mã học kỳ (ví dụ: "20252" -> năm 2025, kỳ 2)
+                    if (term.length() >= 5) {
+                        int year = Integer.parseInt(term.substring(0, 4));
+                        int semester = Integer.parseInt(term.substring(4));
+                        
+                        java.util.Calendar cal = java.util.Calendar.getInstance();
+                        
+                        // Thiết lập ngày bắt đầu dựa trên kỳ học
+                        if (semester == 1) {
+                            // Học kỳ 1: Tháng 9
+                            cal.set(year, java.util.Calendar.SEPTEMBER, 1, 0, 0, 0);
+                        } else if (semester == 2) {
+                            // Học kỳ 2: Tháng 2
+                            cal.set(year, java.util.Calendar.FEBRUARY, 1, 0, 0, 0);
+                        } else {
+                            // Học kỳ hè hoặc khác: Tháng 6
+                            cal.set(year, java.util.Calendar.JUNE, 1, 0, 0, 0);
+                        }
+                        cal.set(java.util.Calendar.MILLISECOND, 0);
+                        startDate = cal.getTime();
+                        
+                        // Ngày kết thúc = ngày bắt đầu + 4 tháng
+                        cal.add(java.util.Calendar.MONTH, 4);
+                        endDate = cal.getTime();
+                        
+                        // Lưu lại vào setting để lần sau không phải tính lại
+                        setting.startDate = startDate;
+                        setting.endDate = endDate;
+                    }
+                } catch (NumberFormatException e) {
+                    // Nếu không parse được, giữ nguyên null
+                }
+            }
+            
+            if (startDate != null && endDate != null) {
+                timeRange = sdf.format(startDate) + " đến " + sdf.format(endDate);
+            } else if (startDate != null) {
+                timeRange = sdf.format(startDate) + " đến -";
+            } else if (endDate != null) {
+                timeRange = "- đến " + sdf.format(endDate);
             }
             
             // Trạng thái
@@ -3382,8 +3431,8 @@ public class AdminFrame extends JFrame {
         // Xác định trạng thái dựa trên registrationOpen để có thể thay đổi được
         cbStatus.setSelectedIndex(currentSetting.registrationOpen ? 0 : 1); // 0 = Đang hoạt động, 1 = Đã kết thúc
         
-        // Thời gian bắt đầu
-        JLabel lbStartDate = new JLabel("Thời gian bắt đầu:");
+        // Thời gian mở đăng ký bắt đầu
+        JLabel lbStartDate = new JLabel("Thời gian mở đăng ký (bắt đầu):");
         lbStartDate.setFont(labelFont);
         lbStartDate.setForeground(new Color(55, 65, 81));
         lbStartDate.setBorder(new EmptyBorder(16, 0, 8, 0));
@@ -3391,7 +3440,7 @@ public class AdminFrame extends JFrame {
         
         JSpinner spStartDate = new JSpinner(new SpinnerDateModel(
                 currentSetting.startDate != null ? currentSetting.startDate : new Date(), null, null, java.util.Calendar.DAY_OF_MONTH));
-        JSpinner.DateEditor startDateEditor = new JSpinner.DateEditor(spStartDate, "MM/dd/yyyy");
+        JSpinner.DateEditor startDateEditor = new JSpinner.DateEditor(spStartDate, "dd/MM/yyyy");
         spStartDate.setEditor(startDateEditor);
         ((JSpinner.DefaultEditor) spStartDate.getEditor()).getTextField().setEditable(false);
         spStartDate.setPreferredSize(new Dimension(0, 40));
@@ -3402,8 +3451,8 @@ public class AdminFrame extends JFrame {
                 BorderFactory.createEmptyBorder(0, 0, 0, 0)
         ));
         
-        // Thời gian kết thúc
-        JLabel lbEndDate = new JLabel("Thời gian kết thúc:");
+        // Thời gian mở đăng ký kết thúc
+        JLabel lbEndDate = new JLabel("Thời gian mở đăng ký (kết thúc):");
         lbEndDate.setFont(labelFont);
         lbEndDate.setForeground(new Color(55, 65, 81));
         lbEndDate.setBorder(new EmptyBorder(16, 0, 8, 0));
@@ -3411,7 +3460,7 @@ public class AdminFrame extends JFrame {
         
         JSpinner spEndDate = new JSpinner(new SpinnerDateModel(
                 currentSetting.endDate != null ? currentSetting.endDate : new Date(), null, null, java.util.Calendar.DAY_OF_MONTH));
-        JSpinner.DateEditor endDateEditor = new JSpinner.DateEditor(spEndDate, "MM/dd/yyyy");
+        JSpinner.DateEditor endDateEditor = new JSpinner.DateEditor(spEndDate, "dd/MM/yyyy");
         spEndDate.setEditor(endDateEditor);
         ((JSpinner.DefaultEditor) spEndDate.getEditor()).getTextField().setEditable(false);
         spEndDate.setPreferredSize(new Dimension(0, 40));
@@ -3611,6 +3660,7 @@ public class AdminFrame extends JFrame {
         }
         
         // Cập nhật thông tin
+        boolean oldRegistrationOpen = setting.registrationOpen;
         setting.registrationOpen = registrationOpen;
         setting.termName = termName;
         setting.academicYear = academicYear;
@@ -3618,9 +3668,15 @@ public class AdminFrame extends JFrame {
         setting.endDate = endDate;
         
         // Nếu mã học kỳ thay đổi, cần di chuyển setting
+        String actualTermCode = oldTermCode.equals(newTermCode) ? oldTermCode : newTermCode;
         if (!oldTermCode.equals(newTermCode)) {
             Memory.termSettings.remove(oldTermCode);
             Memory.termSettings.put(newTermCode, setting);
+        }
+        
+        // Nếu trạng thái chuyển từ "Đang hoạt động" sang "Đã kết thúc", đóng tất cả các Offering
+        if (oldRegistrationOpen && !registrationOpen) {
+            closeAllOfferings(actualTermCode);
         }
         
         // Cập nhật offerings (nếu mã học kỳ thay đổi)
@@ -3644,5 +3700,108 @@ public class AdminFrame extends JFrame {
                 "Thành công",
                 JOptionPane.INFORMATION_MESSAGE);
         return true;
+    }
+    
+    /**
+     * Đóng tất cả các Offering (học phần) của một học kỳ
+     * 
+     * Được gọi khi học kỳ chuyển sang trạng thái "Đã kết thúc"
+     * để đảm bảo sinh viên không thể đăng ký các học phần trong học kỳ đó nữa.
+     * 
+     * @param termCode Mã học kỳ cần đóng tất cả các Offering
+     */
+    void closeAllOfferings(String termCode) {
+        if (termCode == null || termCode.isEmpty()) return;
+        
+        Map<String, Offering> termOfferings = Memory.offerings.get(termCode);
+        if (termOfferings != null) {
+            for (Offering offering : termOfferings.values()) {
+                offering.open = false;
+            }
+        }
+    }
+    
+    /**
+     * Mở tất cả các học phần trong học kỳ đã chọn
+     * 
+     * Mở tất cả các Offering của học kỳ hiện tại trong combobox cbTermCourse.
+     * Nếu học phần chưa có Offering, sẽ tạo mới với trạng thái mở.
+     */
+    void openAllCourses() {
+        String term = (String) cbTermCourse.getSelectedItem();
+        if (term == null || term.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn học kỳ trước.");
+            return;
+        }
+        
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Bạn có chắc muốn mở tất cả các học phần trong học kỳ " + term + "?",
+                "Xác nhận mở tất cả",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+        
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+        
+        int openedCount = 0;
+        for (Course course : Memory.courses.values()) {
+            Offering offering = Memory.getOffering(term, course.code);
+            if (offering == null) {
+                // Tạo mới Offering nếu chưa có
+                Memory.setOffering(term, course.code, true, "Tất cả");
+                openedCount++;
+            } else if (!offering.open) {
+                // Mở Offering nếu đang đóng
+                offering.open = true;
+                openedCount++;
+            }
+        }
+        
+        refreshCourseTable();
+        JOptionPane.showMessageDialog(this, 
+                "Đã mở " + openedCount + " học phần thành công!", 
+                "Thành công", 
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    /**
+     * Đóng tất cả các học phần trong học kỳ đã chọn
+     * 
+     * Đóng tất cả các Offering của học kỳ hiện tại trong combobox cbTermCourse.
+     */
+    void closeAllCourses() {
+        String term = (String) cbTermCourse.getSelectedItem();
+        if (term == null || term.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn học kỳ trước.");
+            return;
+        }
+        
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Bạn có chắc muốn đóng tất cả các học phần trong học kỳ " + term + "?",
+                "Xác nhận đóng tất cả",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+        
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+        
+        int closedCount = 0;
+        Map<String, Offering> termOfferings = Memory.offerings.get(term);
+        if (termOfferings != null) {
+            for (Offering offering : termOfferings.values()) {
+                if (offering.open) {
+                    offering.open = false;
+                    closedCount++;
+                }
+            }
+        }
+        
+        refreshCourseTable();
+        JOptionPane.showMessageDialog(this, 
+                "Đã đóng " + closedCount + " học phần thành công!", 
+                "Thành công", 
+                JOptionPane.INFORMATION_MESSAGE);
     }
 }
